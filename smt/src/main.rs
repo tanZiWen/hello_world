@@ -12,7 +12,7 @@ struct SparseMerkleTree {
 
 impl SparseMerkleTree {
     fn new() -> Self {
-        let mut default_hashes = vec![DEFAULT_HASH; DEPTH + 1];
+        let mut default_hashes = vec![DEFAULT_HASH; DEPTH];
         // 预计算各层默认哈希（从叶子到根）
         for i in (0..DEPTH).rev() {
             default_hashes[i] = Self::hash_children(&default_hashes[i + 1], &default_hashes[i + 1]);
@@ -56,7 +56,7 @@ impl SparseMerkleTree {
         // 向上更新父节点
         for _ in 0..DEPTH {
           // 获取当前层级（子节点所在层）
-          let child_level = path.len() - 1;
+          let child_level: usize = path.len() - 1;
 
           // 生成父路径
           let mut parent_path = path.clone();
@@ -160,15 +160,15 @@ fn main() {
 
     tree.insert(b"key3", b"value3");
 
-    assert!(tree.verify(b"key3", b"value3")); // 不存在的键
+    assert!(tree.verify(b"key3", b"value3")); 
 
     tree.insert(b"key4", b"value4");
 
-    assert!(tree.verify(b"key4", b"value4")); // 不存在的键
+    assert!(tree.verify(b"key4", b"value4"));
 
-    tree.insert(b"key5", b"value4");
+    tree.insert(b"key5", b"value4"); 
 
-    assert!(tree.verify(b"key5", b"value4")); // 不存在的键
+    assert!(tree.verify(b"key5", b"value4"));
 
     // 验证
     
