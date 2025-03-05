@@ -12,15 +12,11 @@ pub use crate::zk::MerkleProofTarget;
 pub use crate::zk::PoseidonHash;
 pub use crate::zk::WitnessWrite;
 pub use crate::zk::HashOut;
-use core::hash;
 use std::array::from_fn;
 use std::iter::once;
 
 use anyhow::Result;
-use plonky2::field::types::PrimeField64;
-use plonky2::plonk::config::GenericHashOut;
 use plonky2::plonk::config::Hasher;
-use plonky2::util::serialization::gate_serialization::default;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
@@ -62,32 +58,8 @@ struct SparseMerkleTree {
 
 impl  SparseMerkleTree {
 
-    fn hash_children(left: Hash, right: Hash) -> Hash {
-        PoseidonHash::two_to_one(left, right)
-    }
-
     fn get_path(hash: &Hash) -> [bool; 256] {    
         from_fn(|i| hash.elements[3 - i / 64].0 >> (63 - i % 64) & 1 > 0)
-    }
-
-    fn split_hash_le(hash: HashOut<GoldilocksField>, bits_per_element: usize) -> Vec<bool> {
-        hash.elements
-            .iter()
-            .flat_map(|&elem| Self::split_le_field_element(elem, bits_per_element))
-            .collect()
-    }
-
-    fn split_le_field_element(value: GoldilocksField, num_bits: usize) -> Vec<bool> {
-        let value_u64 = value.to_canonical_u64();
-        let mut bits = Vec::with_capacity(num_bits);
-            for i in 0..num_bits {
-            bits.push((value_u64 >> i) & 1 == 1);
-        }
-        if num_bits > 64 {
-            bits.resize(num_bits, false);
-        }
-
-        bits
     }
 
     fn new() -> Self {
@@ -103,22 +75,21 @@ impl  SparseMerkleTree {
 
    
     fn insert(&mut self, key: Hash, value: GoldilocksField) {
-        let mut path: Vec<bool> = Self::get_path(&key).into();
+        let mut path: Vec<bool> = Self::get_path(&key).to_vec();
 
-        self.nodes.insert(path.clone(), PoseidonHash::hash_no_pad(&[value]));
+       self.nodes.insert(path.clone(), PoseidonHash::hash_or_noop(&[value]));
 
        for _ in 0..256 {
             path.pop();
             
             let [left, right] = [false, true].map(|v| self.get_digest(&path.iter().cloned().chain(once(v)).collect::<Vec<_>>()));
-             
             self.nodes.insert(path.clone(),  PoseidonHash::two_to_one(left, right));
         };
     }
 
     fn get_digest(&self, index: &[bool]) -> Hash {
         static DEFAULT_HASHS: LazyLock<[Hash; 257]> = LazyLock::new(|| {
-            let mut default_hashes = [Hash::ZERO; DEPTH + 1];
+            let mut default_hashes = [PoseidonHash::hash_or_noop(&[GoldilocksField::ZERO;1]); DEPTH + 1];
             (0..256).rev().for_each(|i| default_hashes[i]=PoseidonHash::two_to_one(default_hashes[i+1], default_hashes[i+1]));
             default_hashes
         });
@@ -128,5 +99,4 @@ impl  SparseMerkleTree {
     pub fn get_merkle_proof(&self, key: &[bool]) -> [Hash; 256] {
        from_fn(|i| self.get_digest(&key[0..255 - i].iter().cloned().chain(once(!key[255 - i])).collect::<Vec<_>>()))
     }
-
 }

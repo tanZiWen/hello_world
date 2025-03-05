@@ -7,16 +7,7 @@ use interpreter::Transaction;
 use interpreter::WitnessWrite;
 
 pub use interpreter::Hash;
-use plonky2::plonk::config::GenericHashOut;
-use plonky2::plonk::config::Hasher;
-use plonky2::iop::target::BoolTarget;
-use plonky2::iop::generator::GeneratedValues;
-use plonky2::iop::witness::PartitionWitness;
-use plonky2::iop::target::Target;
-use plonky2::hash::hash_types::RichField;
-use plonky2::iop::generator::SimpleGenerator;
-use serde::{Serialize, Deserialize};
-use plonky2::field::types::PrimeField64;
+
 
 
 fn main() {
@@ -26,7 +17,7 @@ fn main() {
         let new = builder.add_virtual_public_input();
         let old = builder.add_virtual_target();
         let path = MerkleProofTarget { siblings: builder.add_virtual_hashes(256) };
-        let index = this.elements.map(|v: plonky2::iop::target::Target| builder.split_le(v, 64)).concat();
+        let index = this.elements.iter().flat_map(|&v| builder.split_le(v, 64)).collect::<Vec<_>>();
         let one = builder.sub(new, old);
 
         builder.verify_merkle_proof::<PoseidonHash>(vec![old], &index, root, &path);
@@ -37,18 +28,14 @@ fn main() {
     let mut s = Interpreter::new();
     for i in 0..16 {
         let (old, path) = s.prove(vk.address());
-        // if i == 0 {
-        //     s.insert(vk.address(), old);
-        // }
-        println!("old: {:?}", old);
-        // print!("path: {:?}", path);
-        println!("root: {:?}", s.root());
         let new = old.add_one();
+        println!("old:{:?}, new:{:?}", old, new);
         let proof_result = c.prove(|w, t| {
-            println!("vk.address():{:?}", vk.address());
             w.set_hash_target(t.0, vk.address())?;
             w.set_hash_target(t.1, s.root())?;
-            (0..256).try_for_each(|i| w.set_hash_target(t.2.siblings[i], path[i]))?;
+            (0..256).try_for_each(|i| {
+                w.set_hash_target(t.2.siblings[i], path[i])
+            })?;
             w.set_target(t.3, old)?;
             w.set_target(t.4, new)
         });
