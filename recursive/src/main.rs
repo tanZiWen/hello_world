@@ -1,4 +1,5 @@
-pub mod test;
+pub mod constant;
+pub mod variable;
 
 pub use plonky2::{
     field::{goldilocks_field::GoldilocksField, types::Field},
