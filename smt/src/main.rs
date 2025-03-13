@@ -1,3 +1,14 @@
+pub mod test;
+pub mod test3;
+pub mod test4;
+pub mod test5;
+pub mod test6;
+pub mod test7;
+pub mod test8;
+pub mod test_fn;
+pub mod assert_positive;
+pub mod less_than;
+
 use blake3::Hasher;
 use std::collections::HashMap;
 
@@ -14,7 +25,7 @@ impl SparseMerkleTree {
     fn new() -> Self {
         let mut default_hashes = vec![DEFAULT_HASH; DEPTH];
         // 预计算各层默认哈希（从叶子到根）
-        for i in (0..DEPTH).rev() {
+        for i in (0..DEPTH-1).rev() {
             default_hashes[i] = Self::hash_children(&default_hashes[i + 1], &default_hashes[i + 1]);
         }
 

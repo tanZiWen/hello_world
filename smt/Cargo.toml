@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 blake3 = "1.6.0"
 criterion = "0.5.1"
+plonky2 = "1.0.2"
 sha2 = "0.10.8"

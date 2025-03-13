@@ -62,7 +62,7 @@ fn main() {
 }
 
 fn base_circuit() -> (CircuitData<F,C,2>, Target) {
-    let mut builder = CircuitBuilder::<F, 2>::new(CircuitConfig::standard_recursion_zk_config());
+    let mut builder: CircuitBuilder<GoldilocksField, 2> = CircuitBuilder::<F, 2>::new(CircuitConfig::standard_recursion_zk_config());
 
     let x = builder.add_virtual_target();
     let y = builder.square(x);
