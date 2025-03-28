@@ -1,5 +1,6 @@
 pub mod constant;
 pub mod variable;
+pub mod sub_circuit;
 
 pub use plonky2::{
     field::{goldilocks_field::GoldilocksField, types::Field},

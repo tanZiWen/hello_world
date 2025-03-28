@@ -139,7 +139,7 @@ fn main() {
     // 测试 3: a = 7, b = 7 (7 < 7)
     let mut pw = PartialWitness::new();
     pw.set_target(a, F::from_canonical_u64(7)).unwrap();
-    pw.set_target(b, F::from_canonical_u64(6)).unwrap();
+    pw.set_target(b, F::from_canonical_u64(7)).unwrap();
     let proof = circuit.prove(pw).unwrap();
     circuit.verify(proof).unwrap();
 
